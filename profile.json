@@ -1,0 +1,17 @@
+{
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "architectures": [
+    "SCMP_ARCH_X86",
+    "SCMP_ARCH_X86_64"
+  ],
+  "syscalls": [
+    {
+      "names": [
+        "kexec_load",
+        "open_by_handle_at",
+        "delete_module"
+      ],
+      "action": "SCMP_ACT_ERRNO"
+    }
+  ]
+}
