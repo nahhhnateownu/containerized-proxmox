@@ -14,8 +14,9 @@ Run Proxmox in a container. Don't ask why.
 ```bash
 docker run -d --name proxmox --hostname proxmox \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
+    --restart unless-stopped  \
     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup:rw \
-    -v /usr/lib/modules:/usr/lib/modules --restart unless-stopped  \
+    -v /usr/lib/modules:/usr/lib/modules:ro
     -v ./VM-Backup:/var/lib/vz/dump \
     -v ./ISOs:/var/lib/vz/template/iso \
     ghcr.io/longqt-sea/proxmox-ve
@@ -84,11 +85,8 @@ Open `https://localhost:8006` in your browser. Accept the self-signed cert warni
 - `vmbr0` - Empty bridge, configure it yourself, maybe with macvlan or passthrough a physical NIC
 - `vmbr1` - NAT network for VM (172.16.99.0/24), works out of the box
 
-## Notes
-
-This thing needs `--privileged`. Yes, really. It's running a hypervisor in a container.
-
-If something breaks, it's probably a kernel module issue. Make sure `/usr/lib/modules` is mounted correctly.
+> [!Note]
+> When running with `podman`, make sure to run as root or with `sudo`, rootless Podman does not work even with `--privileged`.
 
 ## License
 
