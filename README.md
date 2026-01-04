@@ -24,6 +24,7 @@ docker run -d --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
     --restart unless-stopped  \
     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
+    -v /dev/vfio:/dev/vfio \
     -v /usr/lib/modules:/usr/lib/modules:ro \
     -v /sys/kernel/security:/sys/kernel/security \
     -v ./VM-Backup:/var/lib/vz/dump \
@@ -176,10 +177,10 @@ docker exec -it pve-3 passwd
 ```
 Restart all nodes at least once:
 ```
-docker restart -t 3 pve-1 pve-2 pve-3
+docker restart -t 5 pve-1 pve-2 pve-3
 ```
 
-Each node can reach each other over hostname or IP address:
+Nodes can reach each other over hostname or IP address:
 | hostname | IPv4       | IPv6    |
 |----------|------------|---------|
 | pve-1    | 10.0.99.1  | fd00::1 |
