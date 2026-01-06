@@ -75,6 +75,7 @@ services:
     privileged: true
     restart: unless-stopped
     cgroup: host
+    shm_size: 1g
     networks:
       dual_stack:
         ipv4_address: 10.0.99.1
@@ -102,6 +103,7 @@ services:
     privileged: true
     restart: unless-stopped
     cgroup: host
+    shm_size: 1g
     networks:
       dual_stack:
         ipv4_address: 10.0.99.2
@@ -129,6 +131,7 @@ services:
     privileged: true
     restart: unless-stopped
     cgroup: host
+    shm_size: 1g
     networks:
       dual_stack:
         ipv4_address: 10.0.99.3
@@ -155,6 +158,7 @@ services:
     hostname: pdm
     restart: unless-stopped
     cgroup: host
+    shm_size: 1g
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup
     cap_add:
@@ -167,6 +171,7 @@ services:
         ipv4_address: 10.0.99.4
         ipv6_address: fd00::4
 
+    # Port mapping only required for Docker Desktop or LAN access from other machines.
     ports:
       - "2225:22"
       - "8443:8443"
