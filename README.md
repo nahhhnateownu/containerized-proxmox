@@ -1,9 +1,6 @@
 ## Overview
-### Proxmox cluster in Docker. Learn, test, break, repeat.
 
-This project provides containerized Proxmox Virtual Environment for development, testing, and learning purposes. Spin up single nodes or entire HA clusters in seconds—perfect for validating infrastructure-as-code, testing failover scenarios, or exploring Proxmox features without dedicated hardware.
-
-## Features
+Proxmox cluster in Docker. Learn, test, break, and repeat.
 
 - **Fast iteration** — Spin up, tear down, repeat in seconds
 - **Cluster simulation** — Test HA, failover, and live migration
@@ -21,22 +18,22 @@ This project provides containerized Proxmox Virtual Environment for development,
 - A modern Linux host with kernel 6.8+
 - [Docker Engine](https://docs.docker.com/engine/install/)
 - CPU with virtualization support (Intel VT-x / AMD-V)
-
-> [!Note]
-> Docker Desktop required nested virtualization, e.g. WSL2: [nestedVirtualization](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#main-wsl-settings)
+- Docker Desktop on Windows with WSL2:
+   - Update the WSL2 kernel to at least version 6.6
+   - To run virtual machines, enable nested virtualization in WSL2 Settings
 
 ---
 
 ## Quick Start
 Standalone node with `docker run`:
 > [!Note]
-> For ARM64 platforms (Apple Silicon, Raspberry Pi 5, Ampere, AWS Graviton .metal),
-> replace `proxmox-ve` with `proxmox-ve-arm64`
+> On ARM64 platforms, use `proxmox-ve-arm64` instead of `proxmox-ve`
 ```bash
 docker run -d --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
     --restart unless-stopped  \
     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
+    --device /dev/watchdog \
     -v /dev/vfio:/dev/vfio \
     -v /usr/lib/modules:/usr/lib/modules:ro \
     -v /sys/kernel/security:/sys/kernel/security \
@@ -57,14 +54,13 @@ Access the web UI at `https://localhost:8006/` (accept the self-signed cert).
 ---
 
 ## Multi-Node Cluster
-Deploy a production-like 3-node HA cluster with shared storage using Docker Compose:
-```
-mkdir pve_cluster && cd pve_cluster
+Deploy a production-like 3-node HA cluster using Docker Compose:
+- Create a project directory and cd into it:
+   ```
+   mkdir pve_cluster; cd pve_cluster
+   ```
 
-nano docker-compose.yml
-```
-
-Paste the content below into nano, save with Ctrl+X, Y, Enter.
+- Create a `compose.yml` file in the `pve_cluster` directory with the following content:
 ```yaml
 services:
   # First node
@@ -76,6 +72,8 @@ services:
     restart: unless-stopped
     cgroup: host
     shm_size: 1g
+    devices:
+      - /dev/watchdog
     networks:
       dual_stack:
         ipv4_address: 10.0.99.1
@@ -104,6 +102,8 @@ services:
     restart: unless-stopped
     cgroup: host
     shm_size: 1g
+    devices:
+      - /dev/watchdog
     networks:
       dual_stack:
         ipv4_address: 10.0.99.2
@@ -132,6 +132,8 @@ services:
     restart: unless-stopped
     cgroup: host
     shm_size: 1g
+    devices:
+      - /dev/watchdog
     networks:
       dual_stack:
         ipv4_address: 10.0.99.3
@@ -194,21 +196,29 @@ docker compose up -d
 ```
 
 Set root password for all nodes:
-```
-docker exec -it pve-1 passwd
-docker exec -it pve-2 passwd
-docker exec -it pve-3 passwd
-```
+> Replace NEWPASSWORD with your own password
+- Linux/macOS Terminal:
+   ```bash
+   for c in pve-1 pve-2 pve-3; do docker exec $c sh -c 'echo "root:NEWPASSWORD" | chpasswd'; done
+   ```
+- Windows Powershell:
+   ```
+   "pve-1","pve-2","pve-3" | % { docker exec $_ sh -c 'echo "root:NEWPASSWORD" | chpasswd' }
+   ```
 
 Restart all nodes at least once:
 ```
-docker restart pve-1 pve-2 pve-3
+docker restart -t 3 pve-1 pve-2 pve-3
 ```
 
 > [!Tip]
-> On Linux hosts, access nodes directly via their container IPs (e.g., `https://10.0.99.1:8006` or `https://[fd00::1]:8006`).
-> 
-> On Docker Desktop (Windows/macOS), use separate browser profiles for each node to avoid authentication conflicts ("invalid PVE ticket 401" errors caused by cookie collisions).
+> When accessing nodes, to avoid authentication conflicts ("invalid PVE ticket 401" errors caused by cookie collisions):
+>
+> | Environment | How to access nodes |  Example |
+> |------------|---------------------|----------|
+> | Docker Engine (Linux) | Access nodes directly via container IPs | `https://[fd00::1]:8006`<br>`https://[fd00::2]:8006`<br>`https://[fd00::3]:8006` |
+> | Docker Desktop (Windows) | Use different loopback address | `https://127.0.0.1:8006`<br>`https://127.0.0.2:8007`<br>`https://127.0.0.3:8008` |
+> | Docker Desktop (macOS) | Use separate browser profile for each node | `Multi Chrome profile`<br>`Or different browser`<br> |
 
 > [!Note]
 > To create the cluster, edit the `eth0` interface like this on **pve-1** node, then go to Datacenter → Cluster → Create Cluster → Copy Join Information

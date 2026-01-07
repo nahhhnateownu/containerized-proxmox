@@ -11,6 +11,7 @@
 #     -p 2222:22 -p 3128:3128 -p 8006:8006 \
 #     --restart unless-stopped  \
 #     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
+#     --device /dev/watchdog \
 #     -v /dev/vfio:/dev/vfio \
 #     -v /usr/lib/modules:/usr/lib/modules:ro \
 #     -v /sys/kernel/security:/sys/kernel/security \
@@ -139,8 +140,7 @@ systemctl mask \
     getty.target \
     console-getty.service \
     systemd-firstboot.service \
-    systemd-networkd-wait-online.service \
-    watchdog-mux.service || true
+    systemd-networkd-wait-online.service
 EOF
 
 # Prevent Docker DNS NAT rules from being flushed when using user-defined bridge
