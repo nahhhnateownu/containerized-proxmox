@@ -7,7 +7,7 @@ Proxmox cluster in Docker. Learn, test, break, and repeat.
 - **Automation testing** — Validate Terraform, Ansible, or scripts
 - **Shared storage** — Mount ISOs, backups, and disk images across all nodes
 - **Dual-Stack Networking** — IPv4 and IPv6 support with pre-configured NAT bridges
-- **KVM and LXC support** — Works out of the box
+- **KVM & LXC ready** — Virtual machines and containers work out of the box
 - **Central management** — Optional [Proxmox Datacenter Manager](proxmox-datacenter-manager) container included
 - **[ARM64 support](pxvirt)** — Proxmox VE on your favorite ARM platform, powered by [PXVIRT](https://docs.pxvirt.lierfang.com/en/README.html)
 
@@ -15,12 +15,12 @@ Proxmox cluster in Docker. Learn, test, break, and repeat.
 
 ## Requirements
 
-- A modern Linux host with kernel 6.8+
+- Modern Linux host with Kernel 6.8+
 - [Docker Engine](https://docs.docker.com/engine/install/)
-- CPU with virtualization support (Intel VT-x / AMD-V)
+- Intel VT-x / AMD-V enabled 
 - Docker Desktop on Windows with WSL2:
-   - Update the WSL2 kernel to at least version 6.6
-   - To run virtual machines, enable nested virtualization in WSL2 Settings
+   - WSL Kernel should be at least version 6.6 (`wsl --version`)
+   - To run virtual machines, enable nested virtualization in WSL Settings
 
 ---
 
@@ -33,7 +33,7 @@ docker run -d --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
     --restart unless-stopped  \
     --privileged --cgroupns=host -v /sys/fs/cgroup:/sys/fs/cgroup \
-    --device /dev/watchdog \
+    --device /dev/kvm --device /dev/watchdog \
     -v /dev/vfio:/dev/vfio \
     -v /usr/lib/modules:/usr/lib/modules:ro \
     -v /sys/kernel/security:/sys/kernel/security \
@@ -73,6 +73,7 @@ services:
     cgroup: host
     shm_size: 1g
     devices:
+      - /dev/kvm
       - /dev/watchdog
     networks:
       dual_stack:
@@ -103,6 +104,7 @@ services:
     cgroup: host
     shm_size: 1g
     devices:
+      - /dev/kvm
       - /dev/watchdog
     networks:
       dual_stack:
@@ -133,6 +135,7 @@ services:
     cgroup: host
     shm_size: 1g
     devices:
+      - /dev/kvm
       - /dev/watchdog
     networks:
       dual_stack:
@@ -196,14 +199,14 @@ docker compose up -d
 ```
 
 Set root password for all nodes:
-> Replace NEWPASSWORD with your own password
+> Replace `123` with your own password
 - Linux/macOS Terminal:
    ```bash
-   for c in pve-1 pve-2 pve-3; do docker exec $c sh -c 'echo "root:NEWPASSWORD" | chpasswd'; done
+   for c in pve-1 pve-2 pve-3; do docker exec $c sh -c 'echo "root:123" | chpasswd'; done
    ```
 - Windows Powershell:
    ```
-   "pve-1","pve-2","pve-3" | % { docker exec $_ sh -c 'echo "root:NEWPASSWORD" | chpasswd' }
+   "pve-1","pve-2","pve-3" | % { docker exec $_ sh -c 'echo "root:123" | chpasswd' }
    ```
 
 Restart all nodes at least once:
@@ -212,18 +215,21 @@ docker restart -t 3 pve-1 pve-2 pve-3
 ```
 
 > [!Tip]
-> When accessing nodes, to avoid authentication conflicts ("invalid PVE ticket 401" errors caused by cookie collisions):
+> Access nodes like this to avoid authentication conflicts ("invalid PVE ticket 401" errors caused by cookie collisions):
 >
 > | Environment | How to access nodes |  Example |
 > |------------|---------------------|----------|
 > | Docker Engine (Linux) | Access nodes directly via container IPs | `https://[fd00::1]:8006`<br>`https://[fd00::2]:8006`<br>`https://[fd00::3]:8006` |
 > | Docker Desktop (Windows) | Use different loopback address | `https://127.0.0.1:8006`<br>`https://127.0.0.2:8007`<br>`https://127.0.0.3:8008` |
-> | Docker Desktop (macOS) | Use separate browser profile for each node | `Multi Chrome profile`<br>`Or different browser`<br> |
+> | Docker Desktop (macOS) | Use separate browser profile for each node | `Multiple Chrome profile`<br>`Or different browser`<br> |
 
 > [!Note]
-> To create the cluster, edit the `eth0` interface like this on **pve-1** node, then go to Datacenter → Cluster → Create Cluster → Copy Join Information
-> 
-> Other nodes go to Datacenter → Cluster → Join Cluster → Paste the copied Join Information → Enter password
+> To create the cluster, go to **System → Network** on **pve-1** node, edit `eth0` interface as shown in the image below.
+>
+> Next, go to **Datacenter → Cluster → Create Cluster** and copy **Join Information**.
+>
+> On other nodes, go to **Datacenter → Cluster → Join Cluster**, paste the copied **Join Information**, enter root password.
+>
 > <p align="center">
 >   <img src="https://github.com/LongQT-sea/containerized-proxmox/raw/main/.github/pve-1_eth0_interface.png" alt="PVE network">
 > </p>
@@ -247,10 +253,10 @@ docker compose down -t 0
 
 | Port | Purpose |
 |------|--------------|
-| 8006 | PVE Web UI |
+| 8006 | Proxmox VE Web UI |
 | 3128 | SPICE proxy |
-| 22 | SSH |
-| 8443 | PDM Web UI |
+| 22 | OpenSSH |
+| 8443 | Proxmox Datacenter Manager Web UI |
 
 ## Volumes
 
