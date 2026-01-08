@@ -12,6 +12,7 @@ docker run -d --name pdm --hostname pdm \
     --security-opt seccomp=unconfined \
     --security-opt apparmor=unconfined \
     --cap-add=SYS_ADMIN \
+    --cap-add=NET_ADMIN \
     ghcr.io/longqt-sea/proxmox-datacenter-manager
 ```
 
@@ -31,6 +32,7 @@ services:
     cgroup: private
     cap_add:
       - SYS_ADMIN
+      - NET_ADMIN
     security_opt:
       - seccomp=unconfined
       - apparmor=unconfined

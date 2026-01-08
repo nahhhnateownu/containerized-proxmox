@@ -66,6 +66,7 @@ apt install -y --no-install-recommends \
     dbus \
     iproute2 \
     ifupdown2 \
+    bridge-utils \
     iputils-ping \
     sudo \
     wget \
@@ -136,14 +137,19 @@ RuntimeMaxUse=50M
 EOF
 
 # Config OpenSSH
-RUN <<EOF
-sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Fix ifupdown2-pre.service for container (no udev)
+COPY <<'EOF' /etc/systemd/system/ifupdown2-pre.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/bin/true
 EOF
 
 # Create entrypoint script
 COPY <<'EOF' /entrypoint.sh
 #!/bin/bash
-# Remount cgroup2 as read-write (Fk docker)
+# Remount cgroup2 as read-write (F docker)
 if mount | grep -q '/sys/fs/cgroup.*ro,'; then
     umount /sys/fs/cgroup
     mount -t cgroup2 cgroup2 /sys/fs/cgroup -o rw,nosuid,nodev,noexec
