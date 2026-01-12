@@ -10,8 +10,17 @@
 # docker run -dit --name pve-1 --hostname pve-1 \
 #     -p 2222:22 -p 3128:3128 -p 8006:8006 \
 #     --restart unless-stopped  \
-#     --privileged --cgroupns=private \
-#     --device /dev/kvm \
+#     --cgroupns=private \
+#     --security-opt seccomp=profile.json \
+#     --security-opt apparmor=unconfined \
+#     --security-opt systempaths=unconfined \
+#     --device-cgroup-rule='a *:* rwm' \
+#     --cap-add=SYS_ADMIN \
+#     --cap-add=NET_ADMIN \
+#     --cap-add=MAC_ADMIN \
+#     --cap-add=SYS_MODULE \
+#     --cap-add=IPC_LOCK \
+#     --cap-add=SYS_PTRACE \
 #     -v /dev/vfio:/dev/vfio \
 #     -v /usr/lib/modules:/usr/lib/modules:ro \
 #     -v /sys/kernel/security:/sys/kernel/security \
@@ -310,6 +319,9 @@ for i in $(seq 0 30); do
   fi
 done
 
+# Unmask after boot to fix LXC startup issues (masked earlier in entrypoint script)
+umount /sys/class/drm
+
 exit 0
 EOF1
 chmod +x /etc/rc.local
@@ -322,6 +334,26 @@ COPY <<'EOF' /entrypoint.sh
 mount -o remount,rw /sys/fs/cgroup 2>/dev/null
 mount -o remount,rw /proc/sys 2>/dev/null
 mount -o remount,rw /sys 2>/dev/null
+
+# Prevent udev from touching the host GPU during early boot to avoid black screens in the host DE
+mount -t tmpfs -o ro,noexec,nosuid tmpfs /sys/class/drm
+
+# Set shm size to 1G to prevent cluster joining issue
+mount -o remount,size=1G /dev/shm
+
+# Add device nodes needed by PVE
+mkdir -p /dev/net /dev/mapper
+mknod /dev/kvm            c 10 232
+mknod /dev/fuse           c 10 229
+mknod /dev/zfs            c 10 249
+mknod /dev/net/tun        c 10 200
+mknod /dev/loop-control   c 10 237
+mknod /dev/mapper/control c 10 236
+chown root:kvm  /dev/kvm 
+chown root:disk /dev/loop-control
+chmod 666 /dev/kvm /dev/zfs 
+chmod 660 /dev/loop-control
+chmod 600 /dev/mapper/control
 
 # Set root password
 if [ -n "$PASSWORD" ]; then

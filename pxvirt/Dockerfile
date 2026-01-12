@@ -13,10 +13,11 @@
 #     --cgroupns=private \
 #     --security-opt seccomp=profile.json \
 #     --device-cgroup-rule='a *:* rwm' \
-#     --cap-add=SYS_ADMIN \
-#     --cap-add=NET_ADMIN \
-#     --cap-add=SYS_MODULE \
-#     --cap-add=IPC_LOCK \
+#     --cap-add SYS_ADMIN \
+#     --cap-add NET_ADMIN \
+#     --cap-add SYS_MODULE \
+#     --cap-add IPC_LOCK \
+#     --cap-add SYS_PTRACE \
 #     -v /usr/lib/modules:/usr/lib/modules:ro \
 #     -v /sys/kernel/security:/sys/kernel/security \
 #     -v ./VM-Backup:/var/lib/vz/dump \
@@ -310,6 +311,9 @@ for i in $(seq 0 30); do
   fi
 done
 
+# Unmask after boot to fix LXC startup issues (masked earlier in entrypoint script)
+umount /sys/class/drm
+
 # Update arm64 LXC template
 pveam update 2>/dev/null
 
@@ -329,7 +333,7 @@ mount -o remount,rw /sys/fs/cgroup 2>/dev/null
 mount -o remount,rw /proc/sys 2>/dev/null
 mount -o remount,rw /sys 2>/dev/null
 
-# Prevent container from messing with the host DE
+# Prevent udev from touching the host GPU during early boot to avoid black screens in the host DE
 mount -t tmpfs -o ro,noexec,nosuid tmpfs /sys/class/drm
 
 # Set shm size to 1G to prevent cluster joining issue
@@ -341,12 +345,11 @@ mknod /dev/kvm            c 10 232
 mknod /dev/fuse           c 10 229
 mknod /dev/zfs            c 10 249
 mknod /dev/net/tun        c 10 200
-mknod /dev/vhost-net      c 10 238
 mknod /dev/loop-control   c 10 237
 mknod /dev/mapper/control c 10 236
-chown root:kvm  /dev/kvm /dev/vhost-net
+chown root:kvm  /dev/kvm 
 chown root:disk /dev/loop-control
-chmod 666 /dev/kvm /dev/zfs /dev/vhost-net
+chmod 666 /dev/kvm /dev/zfs 
 chmod 660 /dev/loop-control
 chmod 600 /dev/mapper/control
 

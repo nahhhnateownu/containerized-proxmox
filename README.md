@@ -28,15 +28,22 @@ Proxmox cluster in Docker. Learn, test, break, and repeat.
 ## Quick Start
 Standalone node with `docker run`:
 > [!Note]
-> - On ARM64 platforms, use `proxmox-ve-arm64` instead of `proxmox-ve`
+> - On ARM64 platforms, use [`proxmox-ve-arm64`](pxvirt) instead of `proxmox-ve`
 > - Remove `--detach` if you want an interactive console, to escape, hold CTRL then press P + Q
 > - Run `docker attach pve-1` to reattach later if needed
+
+> [!Tip]
+>  For full hardware devices access, add `--privileged` flag
+
 ```bash
 docker run --detach -it --name pve-1 --hostname pve-1 \
     -p 2222:22 -p 3128:3128 -p 8006:8006 \
     --restart unless-stopped  \
-    --privileged --cgroupns=private \
-    --device /dev/kvm \
+    --cgroupns=private --cap-add ALL \
+    --security-opt seccomp=unconfined \
+    --security-opt apparmor=unconfined \
+    --security-opt systempaths=unconfined \
+    --device-cgroup-rule "a *:* rwm" \
     -v /dev/vfio:/dev/vfio \
     -v /usr/lib/modules:/usr/lib/modules:ro \
     -v /sys/kernel/security:/sys/kernel/security \
@@ -68,14 +75,18 @@ x-service: &systemd
   stdin_open: true
   tty: true
   cgroup: private
+  device_cgroup_rules:
+    - "a *:* rwm"
+  cap_add:
+    - ALL
+  security_opt:
+    - seccomp=unconfined
+    - apparmor=unconfined
+    - systempaths=unconfined
 
 x-pve-service: &pve-systemd
   <<: *systemd
   image: ghcr.io/longqt-sea/proxmox-ve
-  privileged: true
-  shm_size: 1g
-  devices:
-    - /dev/kvm
   volumes:
     - /usr/lib/modules:/usr/lib/modules:ro        # Required for loading kernel modules
     - /sys/kernel/security:/sys/kernel/security   # Optional, needed for LXC
@@ -99,7 +110,7 @@ services:
       dual_stack:
         ipv4_address: 10.0.99.1
         ipv6_address: fd00::1
-    
+
     # Port mapping only required for Docker Desktop or remote access from other machines.
     ports:
       - "2222:22"
@@ -118,7 +129,7 @@ services:
       dual_stack:
         ipv4_address: 10.0.99.2
         ipv6_address: fd00::2
-    
+
     # Port mapping only required for Docker Desktop or remote access from other machines.
     ports:
       - "2223:22"
@@ -137,7 +148,7 @@ services:
       dual_stack:
         ipv4_address: 10.0.99.3
         ipv6_address: fd00::3
-    
+
     # Port mapping only required for Docker Desktop or remote access from other machines.
     ports:
       - "2224:22"
@@ -247,7 +258,7 @@ docker compose down -t 0
 > When running with `podman`, make sure to run as root or with `sudo`, rootless Podman does not work even with `--privileged`.
 
 > [!Warning]
-> This setup uses the `--privileged` flag. The container can do almost everything the Linux host can do. Use with caution.
+> Use the `--privileged` flag with caution. A privileged container can do almost everything the Linux host can do.
 
 ---
 
